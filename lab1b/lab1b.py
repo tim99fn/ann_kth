@@ -298,6 +298,9 @@ def plot_model_complexity_error(trials,epochs,hidden_layer_sizes,error_mse,error
     fig1.tight_layout()
     fig1.savefig("img/311_2/model_complexity_error_"+flag+".png",dpi=300)
 
+def gauss(data):
+    return np.exp(-(data[0,:]**2+data[1,:]**2)/10)-0.5
+
 if __name__ == "__main__":
     np.random.seed(33)
     epochs = 100
@@ -305,7 +308,7 @@ if __name__ == "__main__":
     alpha = 0.9
     hidden_layer_sizes = [2,3,5,8,10,15]
     X, T = create_data(n=100,mu_A=[1.0,0.3],mu_B=[0.0,0.1],sigma_A=0.2,sigma_B=0.3)
-    plot_data(X,T)
+    # plot_data(X,T)
     X = np.concatenate((X,np.ones((1,X.shape[1]))),axis=0)
 
     # Task 3.1.1. Question 1
@@ -349,7 +352,7 @@ if __name__ == "__main__":
     # Flipped training and validation sets
     hidden_layer_sizes = np.arange(1,21)
     trials = 20
-    if True:
+    if False:
         for flag in ["25-25","50-0","80-20"]:
             X_val, X_train, T_val, T_train = split_data(X,T,flag)
             error_mse = np.zeros((epochs,2,hidden_layer_sizes.size,trials))
@@ -374,6 +377,75 @@ if __name__ == "__main__":
     # Task 3.1.2 -> skip for now
 
     # Task 3.1.3
+    epochs = 100
+    trials = 30
+    hidden_layer_sizes = np.arange(1,25,3)
+    eta = 0.1
+    alpha = 0.9
+    x = np.arange(-5,5,0.5)
+    y = np.arange(-5,5,0.5)
+    X, Y = np.meshgrid(x,y)
+    patterns = np.vstack([X.ravel(), Y.ravel(), np.ones_like(X.ravel())])
+    targets = gauss(patterns)
+
+    # Plot target surface
+    fig1, ax1 = plt.subplots(subplot_kw={"projection": "3d"})
+    ax1.plot_surface(X,Y,targets.reshape(X.shape), cmap="coolwarm")
+    fig1.canvas.draw()
+    fig1.show()
+    fig1.savefig("img/313/target_surface.png", dpi=300)
+
+    fig3,ax3 = plt.subplots()
+    for i, hidden_layer_size in enumerate(hidden_layer_sizes):
+        error = np.zeros((epochs,trials))
+        for j in range(trials):
+            W = np.random.normal(size=(hidden_layer_size,3))
+            V = np.random.normal(size=(1,hidden_layer_size+1))
+            delta_W = np.zeros_like(W)
+            delta_V = np.zeros_like(V)
+            fig2, ax2 = plt.subplots(subplot_kw={"projection": "3d"})
+            ax2.set_title(f"k={hidden_layer_size}")
+            for e in range(epochs):
+                # 1) forward pass
+                O_out, _, H_out = predict_output(patterns,W,V)
+                # Calculate errors
+                error[e,j] = np.mean((O_out - targets)**2)
+                # 2) backward pass
+                delta_o = (O_out - targets) * phi_prime(O_out)
+                delta_h = (V.T @ delta_o) * phi_prime(H_out)
+                delta_h = delta_h[:-1,:]
+                # 3) weight update
+                delta_W = alpha * delta_W - (1-alpha) * delta_h @ patterns.T
+                delta_V = alpha * delta_V - (1-alpha) * delta_o @ H_out.T
+                W = W + eta * delta_W
+                V = V + eta * delta_V
+                # Plot the evolution of the predicted surface
+                # ax2.clear()
+                # ax2.plot_surface(X,Y,O_out.reshape(X.shape), cmap="coolwarm")
+                # fig2.canvas.draw()
+                # fig2.show()
+                if e == epochs-1 and j == trials -1:
+                    ax2.plot_surface(X,Y,O_out.reshape(X.shape), cmap="coolwarm")
+                    # plt.pause(0.2)
+                    fig2.tight_layout()
+                    fig2.savefig(f"img/313/predicted_surface_k_{hidden_layer_size}_epochs_{epochs}.png", dpi=300)
+                # else:
+                #     plt.pause(0.025)
+        mean_error = np.mean(error,axis=1)
+        var_error = np.var(error,axis=1)
+        ax3.plot(range(epochs),mean_error,label=f"k={hidden_layer_size}")
+        ax3.fill_between(range(epochs),mean_error-var_error,mean_error+var_error,alpha=0.3)
+    ax3.set_title(f"MSE for function approximation, alpha={alpha}, eta={eta}, trials={trials}")
+    ax3.set_xlabel("Epochs")
+    ax3.set_ylabel("MSE")
+    ax3.set_xlim(0,epochs)
+    ax3.legend()
+    fig3.tight_layout()
+    fig3.savefig(f"img/313/error_predicted_surface.png", dpi=300)
+
+
+
+
 
 
 
