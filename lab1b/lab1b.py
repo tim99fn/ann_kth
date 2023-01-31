@@ -153,6 +153,36 @@ def train_and_validate(X_train,T_train,X_val,T_val,W,V,epochs,eta,alpha):
         V = V + eta * delta_V
     return W, V, error_mse, error_misclassified
 
+def train_and_validate_sequential(X_train,T_train,X_val,T_val,W,V,epochs,eta,alpha):
+    delta_W = np.zeros_like(W)
+    delta_V = np.zeros_like(V)
+    error_mse = np.zeros((epochs,2))
+    error_misclassified = np.zeros((epochs,2))
+    for e in range(epochs):
+        for i in range(X_train.shape[1]):
+            x = X_train[:,i].reshape(3,1)
+            t = T_train[i]
+            # 1) forward pass
+            O_out_train, pred_train, H_out = predict_output(x,W,V)
+            # Calculate errors
+            error_mse[e,0] += (O_out_train - t)**2
+            error_misclassified[e,0] += pred_train==t
+            # 3) backward pass
+            delta_o = (O_out_train - t) * phi_prime(O_out_train)
+            delta_h = (V.T @ delta_o) * phi_prime(H_out)
+            delta_h = delta_h[:-1,:]
+            # 4) weight update
+            delta_W = alpha * delta_W - (1-alpha) * delta_h @ x.T
+            delta_V = alpha * delta_V - (1-alpha) * delta_o @ H_out.T
+            W = W + eta * delta_W
+            V = V + eta * delta_V
+        error_mse[e,0] = error_mse[e,0]/X_train.shape[1]
+        error_misclassified[e,0] = 1 - error_misclassified[e,0]/X_train.shape[1]
+        O_out_val, pred_val, _ = predict_output(X_val,W,V)
+        error_mse[e,1] = np.mean((O_out_val - T_val)**2)
+        error_misclassified[e,1] = 1 - np.mean(pred_val==T_val)
+    return W, V, error_mse, error_misclassified
+
 def plot_data(X,T):
     fig,ax = plt.subplots()
     scatter = ax.scatter(X[0,:],X[1,:], c=T)
@@ -160,7 +190,7 @@ def plot_data(X,T):
     ax.add_artist(legend1)
     fig.savefig("img/311_1/data.png", dpi=300)
 
-def estimate_boundary(X_train,T_train,X_val,T_val,W,V,flag):
+def estimate_boundary(X_train,T_train,X_val,T_val,W,V,flag,hidden_layer_size):
     fig2, ax2 = plt.subplots()
     # Plot the data
     scatter2 = ax2.scatter(X_val[0,:],X_val[1,:], c=T_val)
@@ -177,13 +207,16 @@ def estimate_boundary(X_train,T_train,X_val,T_val,W,V,flag):
     pred = np.reshape(pred, (y.size,x.size), order="F")
     # Plot the resulting contour
     p = ax2.contourf(x,y,pred,alpha=0.1)
-    if len(scatter.legend_elements()[0]) == 2:
-        legend1 = ax2.legend(handles=[scatter.legend_elements()[0][1],scatter2.legend_elements()[0][1],scatter.legend_elements()[0][0],scatter2.legend_elements()[0][0]], labels=["Class A Training", "Class A Validation", "Class B Training","Class B Validation"], loc="lower left")
-    else:
+    if len(scatter.legend_elements()[0]) == 1:
         legend1 = ax2.legend(handles=[scatter.legend_elements()[0][0],scatter2.legend_elements()[0][1],scatter2.legend_elements()[0][0]], labels=["Class A Training", "Class A Validation","Class B Validation"], loc="lower left")
+    elif len(scatter2.legend_elements()[0]) == 1:
+        legend1 = ax2.legend(handles=[scatter.legend_elements()[0][1],scatter.legend_elements()[0][0],scatter2.legend_elements()[0][0]], labels=["Class A Training", "Class B Training","Class A Validation"], loc="lower left")
+    else:
+        legend1 = ax2.legend(handles=[scatter.legend_elements()[0][1],scatter2.legend_elements()[0][1],scatter.legend_elements()[0][0],scatter2.legend_elements()[0][0]], labels=["Class A Training", "Class A Validation", "Class B Training","Class B Validation"], loc="lower left")
     ax2.add_artist(legend1)
+    ax2.set_title(f"Estimated decision boundary, subsampling={flag}, hidden layer size={hidden_layer_size}")
     fig2.savefig("img/311_2/estimated_boundary_"+flag+".png",dpi=300)
-    plt.show()
+    # plt.show()
 
 def plot_learning_curves(trials,epochs,hidden_layer_sizes,error_mse,error_misclassified):
     fig1,axes1 = plt.subplots(1,2,figsize=(15, 5))
@@ -290,23 +323,53 @@ if __name__ == "__main__":
     # Task 3.1.1. Question 2
     hidden_layer_sizes = np.arange(1,21)
     trials = 20
-    if True:
+    if False:
         for flag in ["25-25","50-0","80-20"]:
             X_train, X_val, T_train, T_val = split_data(X,T,flag)
             error_mse = np.zeros((epochs,2,hidden_layer_sizes.size,trials))
             error_misclassified = np.zeros((epochs,2,hidden_layer_sizes.size,trials))
+            error_mse_seq = np.zeros((epochs,2,hidden_layer_sizes.size,trials))
+            error_misclassified_seq = np.zeros((epochs,2,hidden_layer_sizes.size,trials))
             for i, hidden_layer_size in enumerate(hidden_layer_sizes):
                 for j in range(trials):
                     W = np.random.normal(size=(hidden_layer_size,3))
                     V = np.random.normal(size=(1,hidden_layer_size+1))
+                    W_seq = np.random.normal(size=(hidden_layer_size,3))
+                    V_seq = np.random.normal(size=(1,hidden_layer_size+1))
                     # TODO split accuracy into class A and B -> maybe unnecessary
                     W, V, error_mse[:,:,i,j], error_misclassified[:,:,i,j] = train_and_validate(X_train,T_train,X_val,T_val,W,V,epochs,eta,alpha)
+                    _, _, error_mse_seq[:,:,i,j], error_misclassified_seq[:,:,i,j] = train_and_validate_sequential(X_train,T_train,X_val,T_val,W_seq,V_seq,epochs,eta,alpha)
+                if hidden_layer_size == 8:
+                    estimate_boundary(X_train,T_train,X_val,T_val,W,V,flag,hidden_layer_size)
             plot_learning_and_validation_curves(trials,epochs,hidden_layer_sizes[[2,4,7]],error_mse[:,:,[2,4,7],:],error_misclassified[:,:,[2,4,7],:],flag)
+            plot_learning_and_validation_curves(trials,epochs,hidden_layer_sizes[[2,4,7]],error_mse_seq[:,:,[2,4,7],:],error_misclassified_seq[:,:,[2,4,7],:],flag+"-seq")
             plot_model_complexity_error(trials,epochs,hidden_layer_sizes,error_mse,error_misclassified,flag)
-            estimate_boundary(X_train,T_train,X_val,T_val,W,V,flag)
-            plt.show()
-    # TODO compare batch and sequential learning
-    # TODO flip training and validation sets
+            # plt.show()
+
+    # Flipped training and validation sets
+    hidden_layer_sizes = np.arange(1,21)
+    trials = 20
+    if True:
+        for flag in ["25-25","50-0","80-20"]:
+            X_val, X_train, T_val, T_train = split_data(X,T,flag)
+            error_mse = np.zeros((epochs,2,hidden_layer_sizes.size,trials))
+            error_misclassified = np.zeros((epochs,2,hidden_layer_sizes.size,trials))
+            error_mse_seq = np.zeros((epochs,2,hidden_layer_sizes.size,trials))
+            error_misclassified_seq = np.zeros((epochs,2,hidden_layer_sizes.size,trials))
+            for i, hidden_layer_size in enumerate(hidden_layer_sizes):
+                for j in range(trials):
+                    W = np.random.normal(size=(hidden_layer_size,3))
+                    V = np.random.normal(size=(1,hidden_layer_size+1))
+                    W_seq = np.random.normal(size=(hidden_layer_size,3))
+                    V_seq = np.random.normal(size=(1,hidden_layer_size+1))
+                    W, V, error_mse[:,:,i,j], error_misclassified[:,:,i,j] = train_and_validate(X_train,T_train,X_val,T_val,W,V,epochs,eta,alpha)
+                    _, _, error_mse_seq[:,:,i,j], error_misclassified_seq[:,:,i,j] = train_and_validate_sequential(X_train,T_train,X_val,T_val,W_seq,V_seq,epochs,eta,alpha)
+                if hidden_layer_size == 6:
+                    estimate_boundary(X_train,T_train,X_val,T_val,W,V,flag,hidden_layer_size)
+            plot_learning_and_validation_curves(trials,epochs,hidden_layer_sizes[[2,4,7]],error_mse[:,:,[2,4,7],:],error_misclassified[:,:,[2,4,7],:],flag)
+            plot_learning_and_validation_curves(trials,epochs,hidden_layer_sizes[[2,4,7]],error_mse_seq[:,:,[2,4,7],:],error_misclassified_seq[:,:,[2,4,7],:],flag+"-seq")
+            plot_model_complexity_error(trials,epochs,hidden_layer_sizes,error_mse,error_misclassified,flag)
+            # plt.show()
 
     # Task 3.1.2 -> skip for now
 
