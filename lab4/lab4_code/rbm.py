@@ -81,11 +81,16 @@ class RestrictedBoltzmannMachine():
 
         for it in range(n_iterations):
 
-	    # [TODO TASK 4.1] run k=1 alternating Gibbs sampling : v_0 -> h_0 ->  v_1 -> h_1.
+	        # [TODO TASK 4.1] run k=1 alternating Gibbs sampling : v_0 -> h_0 ->  v_1 -> h_1.
             # you may need to use the inference functions 'get_h_given_v' and 'get_v_given_h'.
             # note that inference methods returns both probabilities and activations (samples from probablities) and you may have to decide when to use what.
+            v0 = visible_trainset[it*self.batch_size:(it+1)*self.batch_size,:]
+            p_h0_given_v0, h0 = self.get_h_given_v(v0) # Use v0 as defined here or just v0=0 as in lab description (only sampling from sigmoid(bias_v))?
+            p_v1_given_h0, v1 = self.get_v_given_h(h0)
+            p_h1_given_v1, h1 = self.get_h_given_v(v1)
 
             # [TODO TASK 4.1] update the parameters using function 'update_params'
+            self.update_params(v0,h0,v1,h1)
             
             # visualize once in a while when visible layer is input images
             
@@ -145,9 +150,13 @@ class RestrictedBoltzmannMachine():
 
         n_samples = visible_minibatch.shape[0]
 
-        # [TODO TASK 4.1] compute probabilities and activations (samples from probabilities) of hidden layer (replace the zeros below) 
+        # [TODO TASK 4.1] compute probabilities and activations (samples from probabilities) of hidden layer (replace the zeros below)
+        # Compute probability
+        p_h_given_v = sigmoid(self.bias_h.reshape(1,-1) + visible_minibatch @ self.weight_vh)
+        # Draw h based on p_h_given_v
+        h = (p_h_given_v <= np.random.uniform(low=0.,high=1.,size=(n_samples,self.ndim_hidden)))
         
-        return np.zeros((n_samples,self.ndim_hidden)), np.zeros((n_samples,self.ndim_hidden))
+        return p_h_given_v, h
 
 
     def get_v_given_h(self,hidden_minibatch):
@@ -183,11 +192,13 @@ class RestrictedBoltzmannMachine():
             
         else:
                         
-            # [TODO TASK 4.1] compute probabilities and activations (samples from probabilities) of visible layer (replace the pass and zeros below)             
-
-            pass
+            # [TODO TASK 4.1] compute probabilities and activations (samples from probabilities) of visible layer (replace the pass and zeros below)            
+            # Compute probability
+            p_v_given_h = sigmoid(self.bias_v.reshape(1,-1) + hidden_minibatch @ self.weight_vh.T)
+            # Draw h based on p_h_given_v
+            v = (p_v_given_h <= np.random.uniform(low=0.,high=1.,size=(n_samples,self.ndim_visible)))
         
-        return np.zeros((n_samples,self.ndim_visible)), np.zeros((n_samples,self.ndim_visible))
+        return p_v_given_h, v
 
 
     
