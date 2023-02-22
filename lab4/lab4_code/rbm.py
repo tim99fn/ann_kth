@@ -53,7 +53,7 @@ class RestrictedBoltzmannMachine():
 
         self.learning_rate = 0.01
         
-        self.momentum = 0.7
+        self.momentum = 0.5
 
         self.print_period = 1000
         
