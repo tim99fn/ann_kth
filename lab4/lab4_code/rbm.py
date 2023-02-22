@@ -55,10 +55,10 @@ class RestrictedBoltzmannMachine():
         
         self.momentum = 0.7
 
-        self.print_period = 5000
+        self.print_period = 1000
         
         self.rf = { # receptive-fields. Only applicable when visible layer is input data
-            "period" : 5000, # iteration period to visualize
+            "period" : 1000, # iteration period to visualize
             "grid" : [5,5], # size of the grid
             "ids" : np.random.randint(0,self.ndim_hidden,25) # pick some random hidden units
             }
@@ -66,7 +66,7 @@ class RestrictedBoltzmannMachine():
         return
 
         
-    def cd1(self,visible_trainset, n_iterations=10001):
+    def cd1(self,visible_trainset, n_iterations=10000, epochs=1):
         
         """Contrastive Divergence with k=1 full alternating Gibbs sampling
 
@@ -79,30 +79,31 @@ class RestrictedBoltzmannMachine():
         
         n_samples = visible_trainset.shape[0]
 
-        for it in range(n_iterations):
+        for _ in range(epochs):
+            for it in range(n_iterations):
 
-	        # [TODO TASK 4.1] run k=1 alternating Gibbs sampling : v_0 -> h_0 ->  v_1 -> h_1.
-            # you may need to use the inference functions 'get_h_given_v' and 'get_v_given_h'.
-            # note that inference methods returns both probabilities and activations (samples from probablities) and you may have to decide when to use what.
-            v0 = visible_trainset[it*self.batch_size:(it+1)*self.batch_size,:]
-            p_h0_given_v0, h0 = self.get_h_given_v(v0) # Use v0 as defined here or just v0=0 as in lab description (only sampling from sigmoid(bias_v))?
-            p_v1_given_h0, v1 = self.get_v_given_h(h0)
-            p_h1_given_v1, h1 = self.get_h_given_v(v1)
+                # [TODO TASK 4.1] run k=1 alternating Gibbs sampling : v_0 -> h_0 ->  v_1 -> h_1.
+                # you may need to use the inference functions 'get_h_given_v' and 'get_v_given_h'.
+                # note that inference methods returns both probabilities and activations (samples from probablities) and you may have to decide when to use what.
+                v0 = visible_trainset[it*self.batch_size:(it+1)*self.batch_size,:]
+                p_h0_given_v0, h0 = self.get_h_given_v(v0) # Use v0 as defined here or just v0=0 as in lab description (only sampling from sigmoid(bias_v))?
+                p_v1_given_h0, v1 = self.get_v_given_h(p_h0_given_v0)
+                p_h1_given_v1, h1 = self.get_h_given_v(p_v1_given_h0)
 
-            # [TODO TASK 4.1] update the parameters using function 'update_params'
-            self.update_params(v0,h0,v1,h1)
-            
-            # visualize once in a while when visible layer is input images
-            
-            if it % self.rf["period"] == 0 and self.is_bottom:
+                # [TODO TASK 4.1] update the parameters using function 'update_params'
+                self.update_params(v0,p_h0_given_v0,p_v1_given_h0,p_h1_given_v1)
                 
-                viz_rf(weights=self.weight_vh[:,self.rf["ids"]].reshape((self.image_size[0],self.image_size[1],-1)), it=it, grid=self.rf["grid"])
+                # visualize once in a while when visible layer is input images
+                
+                if it+1 % self.rf["period"] == 0 and self.is_bottom:
+                    
+                    viz_rf(weights=self.weight_vh[:,self.rf["ids"]].reshape((self.image_size[0],self.image_size[1],-1)), it=it, grid=self.rf["grid"])
 
-            # print progress
-            
-            if it % self.print_period == 0 :
+                # print progress
+                
+                if it+1 % self.print_period == 0 :
 
-                print ("iteration=%7d recon_loss=%4.4f"%(it, np.linalg.norm(visible_trainset - visible_trainset)))
+                    print ("iteration=%7d recon_loss=%4.4f"%(it, np.linalg.norm(visible_trainset - visible_trainset)))
         
         return
     
@@ -123,9 +124,9 @@ class RestrictedBoltzmannMachine():
 
         # [TODO TASK 4.1] get the gradients from the arguments (replace the 0s below) and update the weight and bias parameters
         
-        self.delta_bias_v += np.average(v_0-v_k,axis=0)
-        self.delta_weight_vh += (v_0.T.dot(h_0) - v_k.T.dot(h_k))/self.batch_size
-        self.delta_bias_h += np.average(h_0.astype(int)-h_k.astype(int),axis=0)
+        self.delta_bias_v += self.learning_rate * np.mean(v_0-v_k,axis=0)
+        self.delta_weight_vh += self.learning_rate * (v_0.T.dot(h_0) - v_k.T.dot(h_k))/self.batch_size
+        self.delta_bias_h += self.learning_rate * np.mean(h_0.astype(int)-h_k.astype(int),axis=0)
         
         self.bias_v += self.delta_bias_v
         self.weight_vh += self.delta_weight_vh
