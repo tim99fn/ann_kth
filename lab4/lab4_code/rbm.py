@@ -51,9 +51,11 @@ class RestrictedBoltzmannMachine():
         
         self.weight_h_to_v = None
 
-        self.learning_rate = 0.01
+        self.learning_rate = 0.005
         
-        self.momentum = 0.7
+        self.momentum = 0.5
+
+        self.weight_cost = 0.0001
 
         self.print_period = 1000
         
@@ -75,41 +77,52 @@ class RestrictedBoltzmannMachine():
           n_iterations: number of iterations of learning (each iteration learns a mini-batch)
         """
 
-        print ("learning CD1")
+        print ("Learning CD1...")
         
         n_samples = visible_trainset.shape[0]
 
-        for e in range(epochs):
-            for it in range(n_iterations):
+        recon_loss = np.zeros(epochs+1)
+        recon_loss[0] = self.compute_recon_loss(visible_trainset)
+        print ("Epoch=%2d recon_loss=%4.4f min_weight=%4.4f max_weight=%4.4f"%(0, recon_loss[0], np.min(self.weight_vh), np.max(self.weight_vh)))
+        viz_rf(weights=self.weight_vh[:,self.rf["ids"]].reshape((self.image_size[0],self.image_size[1],-1)), it=0, grid=self.rf["grid"])
 
+        for e in range(1,epochs+1):
+            for it in range(n_iterations):
                 # [TODO TASK 4.1] run k=1 alternating Gibbs sampling : v_0 -> h_0 ->  v_1 -> h_1.
                 # you may need to use the inference functions 'get_h_given_v' and 'get_v_given_h'.
                 # note that inference methods returns both probabilities and activations (samples from probablities) and you may have to decide when to use what.
                 v0 = visible_trainset[it*self.batch_size:(it+1)*self.batch_size,:]
-                p_h0_given_v0, h0 = self.get_h_given_v(v0) # Use v0 as defined here or just v0=0 as in lab description (only sampling from sigmoid(bias_v))?
+                p_h0_given_v0, h0 = self.get_h_given_v(v0)
                 p_v1_given_h0, v1 = self.get_v_given_h(p_h0_given_v0)
                 p_h1_given_v1, h1 = self.get_h_given_v(p_v1_given_h0)
 
                 # [TODO TASK 4.1] update the parameters using function 'update_params'
                 self.update_params(v0,p_h0_given_v0,p_v1_given_h0,p_h1_given_v1)
-                
-                # visualize once in a while when visible layer is input images
-                
-                if (it % self.rf["period"] == 0 or it == n_iterations - 1) and self.is_bottom:
-                    
-                    viz_rf(weights=self.weight_vh[:,self.rf["ids"]].reshape((self.image_size[0],self.image_size[1],-1)), it=it, grid=self.rf["grid"])
+            if e == 1:
+                self.momentum = 0.9
 
-                # print progress
+            # print progress using the entire dataset
+            recon_loss[e] = self.compute_recon_loss(visible_trainset)
+            print ("Epoch=%2d recon_loss=%4.4f min_weight=%4.4f max_weight=%4.4f"%(e, recon_loss[e], np.min(self.weight_vh), np.max(self.weight_vh)))
                 
-                if it % self.print_period == 0 or it == n_iterations-1:
-                    v0 = visible_trainset
-                    p_h0_given_v0, h0 = self.get_h_given_v(v0) # Use v0 as defined here or just v0=0 as in lab description (only sampling from sigmoid(bias_v))?
-                    p_v1_given_h0, v1 = self.get_v_given_h(p_h0_given_v0)
-
-                    print ("iteration=%7d recon_loss=%4.4f"%(it, np.mean(np.linalg.norm(v0 - v1,axis=1),axis=0)))
+            # visualize once in a while when visible layer is input images 
+            viz_rf(weights=self.weight_vh[:,self.rf["ids"]].reshape((self.image_size[0],self.image_size[1],-1)), it=e, grid=self.rf["grid"])
             
-        return
+        return recon_loss
     
+    def compute_recon_loss(self,samples):
+            
+            """Compute reconstruction loss using the entire training set.
+    
+            Args:
+            visible_testset: test data for this rbm, shape is (size of test set, size of visible layer)
+            """
+
+            p_h0_given_v0, h0 = self.get_h_given_v(samples)
+            p_v1_given_h0, v1 = self.get_v_given_h(p_h0_given_v0)
+            recon_loss = np.mean(np.linalg.norm(samples - p_v1_given_h0,axis=1),axis=0)
+            
+            return recon_loss
 
     def update_params(self,v_0,h_0,v_k,h_k):
 
@@ -127,12 +140,17 @@ class RestrictedBoltzmannMachine():
 
         # [TODO TASK 4.1] get the gradients from the arguments (replace the 0s below) and update the weight and bias parameters
         
+        self.delta_bias_v *= self.momentum
         self.delta_bias_v += self.learning_rate * np.mean(v_0-v_k,axis=0)
-        self.delta_weight_vh += self.learning_rate * (v_0.T.dot(h_0) - v_k.T.dot(h_k))/self.batch_size
-        self.delta_bias_h += self.learning_rate * np.mean(h_0.astype(int)-h_k.astype(int),axis=0)
+
+        self.delta_weight_vh *= self.momentum
+        self.delta_weight_vh += self.learning_rate * (v_0.T @ h_0 - v_k.T @ h_k)/self.batch_size
+
+        self.delta_bias_h *= self.momentum
+        self.delta_bias_h += self.learning_rate * np.mean(h_0-h_k,axis=0)
         
-        self.bias_v += self.delta_bias_v
-        self.weight_vh += self.delta_weight_vh
+        self.bias_v +=  self.delta_bias_v
+        self.weight_vh +=  self.delta_weight_vh
         self.bias_h += self.delta_bias_h
         
         return
