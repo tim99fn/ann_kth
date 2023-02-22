@@ -112,7 +112,21 @@ def viz_rf(weights,it,grid):
             axs[x,y].set_xticks([]);
             axs[x,y].set_yticks([]);
             axs[x,y].imshow(weights[:,:,y+grid[1]*x], cmap="bwr", vmin=-imax, vmax=imax, interpolation=None)
-    plt.savefig("rf.iter%06d.png"%it)
+    plt.savefig("rf.epoch%02d.png"%it)
+    plt.close('all')
+
+def plot_recon_loss(recon_loss,sizes):
+    """
+    Plot reconstruction loss
+    """
+    fig,ax = plt.subplots()
+    for i,size in enumerate(sizes):
+      ax.plot(recon_loss[i,:],label="Hidden nodes %d"%size)
+    ax.set_xlabel("Epochs")
+    ax.set_ylabel("Loss")
+    ax.set_title("Reconstruction loss over epochs")
+    ax.legend()
+    fig.savefig("recon_loss.png",dpi=300)
     plt.close('all')
 
 def stitch_video(fig,imgs):
