@@ -79,7 +79,7 @@ class RestrictedBoltzmannMachine():
         
         n_samples = visible_trainset.shape[0]
 
-        for _ in range(epochs):
+        for e in range(epochs):
             for it in range(n_iterations):
 
                 # [TODO TASK 4.1] run k=1 alternating Gibbs sampling : v_0 -> h_0 ->  v_1 -> h_1.
@@ -95,16 +95,19 @@ class RestrictedBoltzmannMachine():
                 
                 # visualize once in a while when visible layer is input images
                 
-                if it+1 % self.rf["period"] == 0 and self.is_bottom:
+                if (it % self.rf["period"] == 0 or it == n_iterations - 1) and self.is_bottom:
                     
                     viz_rf(weights=self.weight_vh[:,self.rf["ids"]].reshape((self.image_size[0],self.image_size[1],-1)), it=it, grid=self.rf["grid"])
 
                 # print progress
                 
-                if it+1 % self.print_period == 0 :
+                if it % self.print_period == 0 or it == n_iterations-1:
+                    v0 = visible_trainset
+                    p_h0_given_v0, h0 = self.get_h_given_v(v0) # Use v0 as defined here or just v0=0 as in lab description (only sampling from sigmoid(bias_v))?
+                    p_v1_given_h0, v1 = self.get_v_given_h(p_h0_given_v0)
 
-                    print ("iteration=%7d recon_loss=%4.4f"%(it, np.linalg.norm(visible_trainset - visible_trainset)))
-        
+                    print ("iteration=%7d recon_loss=%4.4f"%(it, np.mean(np.linalg.norm(v0 - v1,axis=1),axis=0)))
+            
         return
     
 
