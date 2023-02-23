@@ -51,7 +51,7 @@ class RestrictedBoltzmannMachine():
         
         self.weight_h_to_v = None
 
-        self.learning_rate = 0.005
+        self.learning_rate = 0.01
         
         self.momentum = 0.5
 
@@ -144,7 +144,7 @@ class RestrictedBoltzmannMachine():
         self.delta_bias_v += self.learning_rate * np.mean(v_0-v_k,axis=0)
 
         self.delta_weight_vh *= self.momentum
-        self.delta_weight_vh += self.learning_rate * (v_0.T @ h_0 - v_k.T @ h_k)/self.batch_size
+        self.delta_weight_vh = (1-self.weight_cost) * self.delta_weight_vh +  self.learning_rate * (v_0.T @ h_0 - v_k.T @ h_k)/self.batch_size
 
         self.delta_bias_h *= self.momentum
         self.delta_bias_h += self.learning_rate * np.mean(h_0-h_k,axis=0)

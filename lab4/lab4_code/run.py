@@ -5,25 +5,34 @@ from dbn import DeepBeliefNet
 if __name__ == "__main__":
 
     image_size = [28,28]
-    train_imgs,train_lbls,test_imgs,test_lbls = read_mnist(dim=image_size, n_train=10000, n_test=10000)
+    n_train = 5000
+    batch_size = 20
+    n_iterations = n_train//batch_size
+    train_imgs,train_lbls,test_imgs,test_lbls = read_mnist(dim=image_size, n_train=n_train, n_test=10000)
 
     ''' restricted boltzmann machine '''
     
-    for epochs in [10]:
+    epochs = 20
+    hidden_sizes = [200,300,400,500]
+    hidden_sizes = [500]
+    
+    loss_hidden_sizes = np.zeros((4,epochs+1))
+    for i, hidden_size in enumerate(hidden_sizes):
         print ("\nStarting a Restricted Boltzmann Machine...")
-
-
         rbm = RestrictedBoltzmannMachine(ndim_visible=image_size[0]*image_size[1],
-                                        ndim_hidden=500,
+                                        ndim_hidden=hidden_size,
                                         is_bottom=True,
                                         image_size=image_size,
                                         is_top=False,
                                         n_labels=10,
-                                        batch_size=20
+                                        batch_size=batch_size
         )
         
         print (f"\nTrain RBM for {epochs} epochs...")
-        rbm.cd1(visible_trainset=train_imgs, n_iterations=500, epochs=epochs)
+        loss_hidden_sizes[i,:] = rbm.cd1(visible_trainset=train_imgs, n_iterations=n_iterations, epochs=epochs)
+        pause = input("Press any key to continue...")
+
+    plot_recon_loss(loss_hidden_sizes,hidden_sizes)
     
     # ''' deep- belief net '''
 
