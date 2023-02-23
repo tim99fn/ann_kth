@@ -51,7 +51,7 @@ class RestrictedBoltzmannMachine():
         
         self.weight_h_to_v = None
 
-        self.learning_rate = 0.005
+        self.learning_rate = 0.01
         
         self.momentum = 0.5
 
@@ -84,7 +84,7 @@ class RestrictedBoltzmannMachine():
         recon_loss = np.zeros(epochs+1)
         recon_loss[0] = self.compute_recon_loss(visible_trainset)
         print ("Epoch=%2d recon_loss=%4.4f min_weight=%4.4f max_weight=%4.4f"%(0, recon_loss[0], np.min(self.weight_vh), np.max(self.weight_vh)))
-        #viz_rf(weights=self.weight_vh[:,self.rf["ids"]].reshape((self.image_size[0],self.image_size[1],-1)), it=0, grid=self.rf["grid"])
+        viz_rf(weights=self.weight_vh[:,self.rf["ids"]].reshape((self.image_size[0],self.image_size[1],-1)), it=0, grid=self.rf["grid"])
 
         for e in range(1,epochs+1):
             for it in range(n_iterations):
@@ -99,14 +99,15 @@ class RestrictedBoltzmannMachine():
                 # [TODO TASK 4.1] update the parameters using function 'update_params'
                 self.update_params(v0,p_h0_given_v0,p_v1_given_h0,p_h1_given_v1)
             if e == 1:
-                self.momentum = 0.9
+                self.momentum = 0.7
 
             # print progress using the entire dataset
             recon_loss[e] = self.compute_recon_loss(visible_trainset)
             print ("Epoch=%2d recon_loss=%4.4f min_weight=%4.4f max_weight=%4.4f"%(e, recon_loss[e], np.min(self.weight_vh), np.max(self.weight_vh)))
                 
             # visualize once in a while when visible layer is input images 
-            #viz_rf(weights=self.weight_vh[:,self.rf["ids"]].reshape((self.image_size[0],self.image_size[1],-1)), it=e, grid=self.rf["grid"])
+            if self.is_bottom:
+                viz_rf(weights=self.weight_vh[:,self.rf["ids"]].reshape((self.image_size[0],self.image_size[1],-1)), it=e, grid=self.rf["grid"])
             
         return recon_loss
     
@@ -145,13 +146,13 @@ class RestrictedBoltzmannMachine():
         self.delta_bias_v += self.learning_rate * np.mean(v_0-v_k,axis=0)
 
         self.delta_weight_vh *= self.momentum
-        self.delta_weight_vh = (1-self.weight_cost)*self.delta_weight_vh+self.learning_rate * (v_0.T @ h_0 - v_k.T @ h_k)/self.batch_size
+        self.delta_weight_vh +=  self.learning_rate * (v_0.T @ h_0 - v_k.T @ h_k)/self.batch_size
 
         self.delta_bias_h *= self.momentum
         self.delta_bias_h += self.learning_rate * np.mean(h_0-h_k,axis=0)
         
         self.bias_v +=  self.delta_bias_v
-        self.weight_vh +=  self.delta_weight_vh
+        self.weight_vh += self.delta_weight_vh
         self.bias_h += self.delta_bias_h
         
         return
@@ -177,8 +178,8 @@ class RestrictedBoltzmannMachine():
         # Compute probability
         p_h_given_v = sigmoid(self.bias_h.reshape(1,-1) + visible_minibatch @ self.weight_vh)
         # Draw h based on p_h_given_v
-        h = (p_h_given_v <= np.random.uniform(low=0.,high=1.,size=(n_samples,self.ndim_hidden)))
-        
+        h = sample_binary(p_h_given_v)
+
         return p_h_given_v, h
 
 
@@ -210,14 +211,14 @@ class RestrictedBoltzmannMachine():
 
             # [TODO TASK 4.1] compute probabilities and activations (samples from probabilities) of visible layer (replace the pass below). \
             # Note that this section can also be postponed until TASK 4.2, since in this task, stand-alone RBMs do not contain labels in visible layer.
-            p_v_given_h_first= sigmoid(self.bias_v.reshape(1,-1) + hidden_minibatch @ self.weight_vh.T)[:,:-self.n_labels]
-            p_v_given_h_second = softmax(self.bias_v.reshape(1,-1) + hidden_minibatch @ self.weight_vh.T)[:,-self.n_labels:]
+            support = self.bias_v.reshape(1,-1) + hidden_minibatch @ self.weight_vh.T
+            p_v_given_h_first= sigmoid(support[:,:-self.n_labels])
+            p_v_given_h_second = softmax(support[:,-self.n_labels:])
             # Draw h based on p_h_given_v
-            v_first = (p_v_given_h_first <= np.random.uniform(low=0.,high=1.,size=(n_samples,self.ndim_visible-self.n_labels)))
-            v_second=sample_categorical(p_v_given_h_second)
+            v_first = sample_binary(p_v_given_h_first)
+            v_second = sample_categorical(p_v_given_h_second)
             p_v_given_h = np.concatenate((p_v_given_h_first,p_v_given_h_second),axis=1)
-            v=np.concatenate((v_first,v_second),axis=1)
-            return p_v_given_h, v
+            v = np.concatenate((v_first,v_second),axis=1)
             
         else:
                         
@@ -225,7 +226,7 @@ class RestrictedBoltzmannMachine():
             # Compute probability
             p_v_given_h = sigmoid(self.bias_v.reshape(1,-1) + hidden_minibatch @ self.weight_vh.T)
             # Draw h based on p_h_given_v
-            v = (p_v_given_h <= np.random.uniform(low=0.,high=1.,size=(n_samples,self.ndim_visible)))
+            v = sample_binary(p_v_given_h)
         
         return p_v_given_h, v
 
@@ -259,10 +260,9 @@ class RestrictedBoltzmannMachine():
         n_samples = visible_minibatch.shape[0]
 
         # [TODO TASK 4.2] perform same computation as the function 'get_h_given_v' but with directed connections (replace the zeros below) 
-        self.untwine_weights()
-        p_h_given_v = sigmoid(self.bias_h.reshape(1,-1) + visible_minibatch @ self.weight_v_to_h)
+        p_h_given_v = sigmoid(self.bias_h + visible_minibatch @ self.weight_v_to_h)
         # Draw h based on p_h_given_v
-        h = (p_h_given_v <= np.random.uniform(low=0.,high=1.,size=(n_samples,self.ndim_hidden)))
+        h = sample_binary(p_h_given_v)
         return p_h_given_v, h
 
 
@@ -303,10 +303,9 @@ class RestrictedBoltzmannMachine():
         else:
                         
             # [TODO TASK 4.2] performs same computaton as the function 'get_v_given_h' but with directed connections (replace the pass and zeros below)             
-            self.untwine_weights()
-            p_v_given_h = sigmoid(self.bias_v.reshape(1,-1) + hidden_minibatch @ self.weight_h_to_v)
+            p_v_given_h = sigmoid(self.bias_v + hidden_minibatch @ self.weight_h_to_v)
             # Draw h based on p_h_given_v
-            v = (p_v_given_h <= np.random.uniform(low=0.,high=1.,size=(n_samples,self.ndim_visible)))
+            v = sample_binary(p_v_given_h)
             
             
         return p_v_given_h, v       
