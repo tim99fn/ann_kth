@@ -99,21 +99,24 @@ class DeepBeliefNet():
         fig,ax = plt.subplots(1,1,figsize=(3,3))
         plt.subplots_adjust(left=0, bottom=0, right=1, top=1, wspace=0, hspace=0)
         ax.set_xticks([]); ax.set_yticks([])
-
+        pattern= sample_binary(np.random.uniform(low=0.,high=1.,size=(1,784)))
+        prop=self.rbm_stack["vis--hid"].get_h_given_v_dir(pattern)[1]
+        second_prop=self.rbm_stack["hid--pen"].get_h_given_v_dir(prop)[1]
+        
         lbl = true_lbl
-        p_v = np.concatenate((np.random.uniform(low=0.,high=1.,size=(n_sample,500)),lbl),axis=1)
+        v = np.concatenate((second_prop,lbl),axis=1)
 
         # [TODO TASK 4.2] fix the label in the label layer and run alternating Gibbs sampling in the top RBM. From the top RBM, drive the network \ 
         # top to the bottom visible layer (replace 'vis' from random to your generated visible layer).  
         for _ in range(self.n_gibbs_gener):
-            p_h, h = self.rbm_stack["pen+lbl--top"].get_h_given_v(p_v)
-            p_v, v = self.rbm_stack["pen+lbl--top"].get_v_given_h(p_h)
+            p_h, h = self.rbm_stack["pen+lbl--top"].get_h_given_v(v)
+            p_v, v = self.rbm_stack["pen+lbl--top"].get_v_given_h(h)
             p_v[:,-10:] = lbl
             v[:,-10:] = lbl
 
             # first_down = self.rbm_stack["pen+lbl--top"].get_h_given_v(v)[1]
             p_second_down, second_down = self.rbm_stack["hid--pen"].get_v_given_h_dir(p_v[:,:-10])
-            p_vis, vis = self.rbm_stack["vis--hid"].get_v_given_h_dir(p_second_down)
+            p_vis, vis = self.rbm_stack["vis--hid"].get_v_given_h_dir(second_down)
             
             records.append( [ ax.imshow(p_vis.reshape(self.image_size), cmap="bwr", vmin=0, vmax=1, animated=True, interpolation=None) ] )
             

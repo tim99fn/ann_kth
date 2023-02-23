@@ -84,7 +84,8 @@ class RestrictedBoltzmannMachine():
         recon_loss = np.zeros(epochs+1)
         recon_loss[0] = self.compute_recon_loss(visible_trainset)
         print ("Epoch=%2d recon_loss=%4.4f min_weight=%4.4f max_weight=%4.4f"%(0, recon_loss[0], np.min(self.weight_vh), np.max(self.weight_vh)))
-        viz_rf(weights=self.weight_vh[:,self.rf["ids"]].reshape((self.image_size[0],self.image_size[1],-1)), it=0, grid=self.rf["grid"])
+        if self.is_bottom:
+            viz_rf(weights=self.weight_vh[:,self.rf["ids"]].reshape((self.image_size[0],self.image_size[1],-1)), it=0, grid=self.rf["grid"])
 
         for e in range(1,epochs+1):
             for it in range(n_iterations):
@@ -121,7 +122,7 @@ class RestrictedBoltzmannMachine():
 
             p_h0_given_v0, h0 = self.get_h_given_v(samples)
             p_v1_given_h0, v1 = self.get_v_given_h(p_h0_given_v0)
-            print(p_v1_given_h0)
+         
             recon_loss = np.mean(np.linalg.norm(samples - p_v1_given_h0,axis=1),axis=0)
             
             return recon_loss
