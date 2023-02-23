@@ -101,21 +101,21 @@ class DeepBeliefNet():
         ax.set_xticks([]); ax.set_yticks([])
 
         lbl = true_lbl
-        v = np.concatenate((np.zeros((n_sample,500)),lbl),axis=1)
+        p_v = np.concatenate((np.random.uniform(low=0.,high=1.,size=(n_sample,500)),lbl),axis=1)
 
         # [TODO TASK 4.2] fix the label in the label layer and run alternating Gibbs sampling in the top RBM. From the top RBM, drive the network \ 
-        # top to the bottom visible layer (replace 'vis' from random to your generated visible layer).
-        for _ in range(10):    
-            for _ in range(self.n_gibbs_gener):
-                p_h, h = self.rbm_stack["pen+lbl--top"].get_h_given_v(v)
-                p_v, v = self.rbm_stack["pen+lbl--top"].get_v_given_h(h)
-                v[:,-10:] = lbl
+        # top to the bottom visible layer (replace 'vis' from random to your generated visible layer).  
+        for _ in range(self.n_gibbs_gener):
+            p_h, h = self.rbm_stack["pen+lbl--top"].get_h_given_v(p_v)
+            p_v, v = self.rbm_stack["pen+lbl--top"].get_v_given_h(p_h)
+            p_v[:,-10:] = lbl
+            v[:,-10:] = lbl
 
-            first_down = self.rbm_stack["pen+lbl--top"].get_v_given_h(v)[1]
-            second_down = self.rbm_stack["hid--pen"].get_v_given_h_dir(first_down)[1]
-            vis = self.rbm_stack["vis--hid"].get_v_given_h_dir(second_down)[1]
+            # first_down = self.rbm_stack["pen+lbl--top"].get_h_given_v(v)[1]
+            p_second_down, second_down = self.rbm_stack["hid--pen"].get_v_given_h_dir(p_v[:,:-10])
+            p_vis, vis = self.rbm_stack["vis--hid"].get_v_given_h_dir(p_second_down)
             
-            records.append( [ ax.imshow(vis.reshape(self.image_size), cmap="bwr", vmin=0, vmax=1, animated=True, interpolation=None) ] )
+            records.append( [ ax.imshow(p_vis.reshape(self.image_size), cmap="bwr", vmin=0, vmax=1, animated=True, interpolation=None) ] )
             
         anim = stitch_video(fig,records).save("%s.generate%d.mp4"%(name,np.argmax(true_lbl)))            
             
