@@ -5,14 +5,14 @@ from dbn import DeepBeliefNet
 if __name__ == "__main__":
 
     image_size = [28,28]
-    n_train = 10000
+    n_train = 60000
     batch_size = 20
     n_iterations = n_train//batch_size
     train_imgs,train_lbls,test_imgs,test_lbls = read_mnist(dim=image_size, n_train=n_train, n_test=10000)
 
     # ''' restricted boltzmann machine '''
     
-    epochs = 10
+    epochs = 20
     hidden_sizes = [200,300,400,500]
     hidden_sizes = [500]
     
@@ -48,9 +48,9 @@ if __name__ == "__main__":
 
     dbn.train_greedylayerwise(vis_trainset=train_imgs, lbl_trainset=train_lbls, n_iterations=n_iterations, epochs=epochs)
 
-    # dbn.recognize(train_imgs, train_lbls)
+    #dbn.recognize(train_imgs, train_lbls)
     
-    # dbn.recognize(test_imgs, test_lbls)
+    #dbn.recognize(test_imgs, test_lbls)
 
     for digit in range(10):
         digit_1hot = np.zeros(shape=(1,10))

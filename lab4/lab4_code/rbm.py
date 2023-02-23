@@ -122,6 +122,7 @@ class RestrictedBoltzmannMachine():
 
             p_h0_given_v0, h0 = self.get_h_given_v(samples)
             p_v1_given_h0, v1 = self.get_v_given_h(p_h0_given_v0)
+         
             recon_loss = np.mean(np.linalg.norm(samples - p_v1_given_h0,axis=1),axis=0)
             
             return recon_loss
