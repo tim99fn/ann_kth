@@ -55,7 +55,7 @@ class RestrictedBoltzmannMachine():
         
         self.momentum = 0.5
 
-        self.weight_cost = 0.0001
+        self.weight_cost = 0.01
 
         self.print_period = 1000
         
@@ -68,7 +68,7 @@ class RestrictedBoltzmannMachine():
         return
 
         
-    def cd1(self,visible_trainset, n_iterations=10000, epochs=1):
+    def cd1(self,visible_trainset, n_iterations=10000, epochs=20):
         
         """Contrastive Divergence with k=1 full alternating Gibbs sampling
 
@@ -84,7 +84,7 @@ class RestrictedBoltzmannMachine():
         recon_loss = np.zeros(epochs+1)
         recon_loss[0] = self.compute_recon_loss(visible_trainset)
         print ("Epoch=%2d recon_loss=%4.4f min_weight=%4.4f max_weight=%4.4f"%(0, recon_loss[0], np.min(self.weight_vh), np.max(self.weight_vh)))
-        viz_rf(weights=self.weight_vh[:,self.rf["ids"]].reshape((self.image_size[0],self.image_size[1],-1)), it=0, grid=self.rf["grid"])
+        #viz_rf(weights=self.weight_vh[:,self.rf["ids"]].reshape((self.image_size[0],self.image_size[1],-1)), it=0, grid=self.rf["grid"])
 
         for e in range(1,epochs+1):
             for it in range(n_iterations):
@@ -106,7 +106,7 @@ class RestrictedBoltzmannMachine():
             print ("Epoch=%2d recon_loss=%4.4f min_weight=%4.4f max_weight=%4.4f"%(e, recon_loss[e], np.min(self.weight_vh), np.max(self.weight_vh)))
                 
             # visualize once in a while when visible layer is input images 
-            viz_rf(weights=self.weight_vh[:,self.rf["ids"]].reshape((self.image_size[0],self.image_size[1],-1)), it=e, grid=self.rf["grid"])
+            #viz_rf(weights=self.weight_vh[:,self.rf["ids"]].reshape((self.image_size[0],self.image_size[1],-1)), it=e, grid=self.rf["grid"])
             
         return recon_loss
     
@@ -120,6 +120,7 @@ class RestrictedBoltzmannMachine():
 
             p_h0_given_v0, h0 = self.get_h_given_v(samples)
             p_v1_given_h0, v1 = self.get_v_given_h(p_h0_given_v0)
+            print(p_v1_given_h0)
             recon_loss = np.mean(np.linalg.norm(samples - p_v1_given_h0,axis=1),axis=0)
             
             return recon_loss
@@ -144,7 +145,7 @@ class RestrictedBoltzmannMachine():
         self.delta_bias_v += self.learning_rate * np.mean(v_0-v_k,axis=0)
 
         self.delta_weight_vh *= self.momentum
-        self.delta_weight_vh += self.learning_rate * (v_0.T @ h_0 - v_k.T @ h_k)/self.batch_size
+        self.delta_weight_vh = (1-self.weight_cost)*self.delta_weight_vh+self.learning_rate * (v_0.T @ h_0 - v_k.T @ h_k)/self.batch_size
 
         self.delta_bias_h *= self.momentum
         self.delta_bias_h += self.learning_rate * np.mean(h_0-h_k,axis=0)

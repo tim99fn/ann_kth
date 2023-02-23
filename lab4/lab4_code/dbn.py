@@ -106,12 +106,14 @@ class DeepBeliefNet():
 
         # [TODO TASK 4.2] fix the label in the label layer and run alternating Gibbs sampling in the top RBM. From the top RBM, drive the network \ 
         # top to the bottom visible layer (replace 'vis' from random to your generated visible layer).
-            
+        placehold=np.random.normal(0,0.1,(n_sample,self.sizes["pen"]))
+        put=np.concatenate((placehold,lbl),axis=1)
         for _ in range(self.n_gibbs_gener):
-
-            first_down=self.rbm_stack["pen+lbl--top"].get_v_given_h(lbl)[1]
-            second_down=self.rbm_stack["hid--pen"].get_v_given_h(first_down)[1]
-            vis=self.rbm_stack["vis--hid"].get_v_given_h(second_down)[1]
+            
+            first_up=self.rbm_stack["pen+lbl--top"].get_h_given_v(put)[1]
+            put=self.rbm_stack["pen+lbl--top"].get_v_given_h(first_up)[1]
+            second_down=put[-1,:500]@self.rbm_stack["hid--pen"].weight_h_to_v
+            vis=second_down@self.rbm_stack["vis--hid"].weight_h_to_v
             
             
             records.append( [ ax.imshow(vis.reshape(self.image_size), cmap="bwr", vmin=0, vmax=1, animated=True, interpolation=None) ] )
