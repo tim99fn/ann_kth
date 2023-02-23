@@ -209,8 +209,14 @@ class RestrictedBoltzmannMachine():
 
             # [TODO TASK 4.1] compute probabilities and activations (samples from probabilities) of visible layer (replace the pass below). \
             # Note that this section can also be postponed until TASK 4.2, since in this task, stand-alone RBMs do not contain labels in visible layer.
-            
-            pass
+            p_v_given_h_first= sigmoid(self.bias_v.reshape(1,-1) + hidden_minibatch @ self.weight_vh.T)[:,:-self.n_labels]
+            p_v_given_h_second = softmax(self.bias_v.reshape(1,-1) + hidden_minibatch @ self.weight_vh.T)[:,-self.n_labels:]
+            # Draw h based on p_h_given_v
+            v_first = (p_v_given_h_first <= np.random.uniform(low=0.,high=1.,size=(n_samples,self.ndim_visible-self.n_labels)))
+            v_second=sample_categorical(p_v_given_h_second)
+            p_v_given_h = np.concatenate((p_v_given_h_first,p_v_given_h_second),axis=1)
+            v=np.concatenate((v_first,v_second),axis=1)
+            return p_v_given_h, v
             
         else:
                         
@@ -252,8 +258,11 @@ class RestrictedBoltzmannMachine():
         n_samples = visible_minibatch.shape[0]
 
         # [TODO TASK 4.2] perform same computation as the function 'get_h_given_v' but with directed connections (replace the zeros below) 
-        
-        return np.zeros((n_samples,self.ndim_hidden)), np.zeros((n_samples,self.ndim_hidden))
+        self.untwine_weights()
+        p_h_given_v = sigmoid(self.bias_h.reshape(1,-1) + visible_minibatch @ self.weight_v_to_h)
+        # Draw h based on p_h_given_v
+        h = (p_h_given_v <= np.random.uniform(low=0.,high=1.,size=(n_samples,self.ndim_hidden)))
+        return p_h_given_v, h
 
 
     def get_v_given_h_dir(self,hidden_minibatch):
@@ -283,19 +292,23 @@ class RestrictedBoltzmannMachine():
             to get activities. The probabilities as well as activities can then be concatenated back into a normal visible layer.
             """
             
+            pass
             # [TODO TASK 4.2] Note that even though this function performs same computation as 'get_v_given_h' but with directed connections,
             # this case should never be executed : when the RBM is a part of a DBN and is at the top, it will have not have directed connections.
             # Appropriate code here is to raise an error (replace pass below)
             
-            pass
+            
             
         else:
                         
             # [TODO TASK 4.2] performs same computaton as the function 'get_v_given_h' but with directed connections (replace the pass and zeros below)             
-
-            pass
+            self.untwine_weights()
+            p_v_given_h = sigmoid(self.bias_v.reshape(1,-1) + hidden_minibatch @ self.weight_h_to_v)
+            # Draw h based on p_h_given_v
+            v = (p_v_given_h <= np.random.uniform(low=0.,high=1.,size=(n_samples,self.ndim_visible)))
             
-        return np.zeros((n_samples,self.ndim_visible)), np.zeros((n_samples,self.ndim_visible))        
+            
+        return p_v_given_h, v       
         
     def update_generate_params(self,inps,trgs,preds):
         
