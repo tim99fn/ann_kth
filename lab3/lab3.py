@@ -140,7 +140,38 @@ def task_three(p1,p2,p3,p10,p11,W):
     W2 = np.random.normal(size=(1024,1024))
     random_energy_iteration(p,W2,"energy_random_gaussian_W")
     random_energy_iteration(p,0.5*(W2+W2.T),"energy_random_symmetric_gaussian_W")
-    
+
+def add_noise_and_restore(p,f,W):
+    p_noise = np.copy(p)
+    id = np.random.choice(1024, size=int(f*1024), replace=False)
+    p_noise[id] = -p_noise[id]
+    while not np.all(p == p_noise) and not np.all(p_noise == update(W,p_noise)):
+        p_noise = update(W,p_noise)
+    if np.all(p == p_noise):
+        return 1
+    else:
+        return 0
+
+def task_four(p1,p2,p3,W):
+    np.random.seed(82)
+    # Add noise to p1 and try to restore
+    restored = np.zeros((3,11,1000))
+    for i in range(1000):
+        for j, f in enumerate(np.arange(0,1.1,0.1)):
+            restored[0,j,i] = add_noise_and_restore(p1,f,W)
+            restored[1,j,i] = add_noise_and_restore(p2,f,W)
+            restored[2,j,i] = add_noise_and_restore(p3,f,W)
+    plt.figure()
+    plt.plot(np.arange(0,1.1,0.1), np.mean(restored[0,:,:],axis=1), label="p1")
+    plt.plot(np.arange(0,1.1,0.1), np.mean(restored[1,:,:],axis=1), label="p2")
+    plt.plot(np.arange(0,1.1,0.1), np.mean(restored[2,:,:],axis=1), label="p3")
+    plt.xlabel("Noise level")
+    plt.ylabel("Restored")
+    plt.xticks(np.arange(0,1.1,0.1))
+    # plt.yticks([0,1],["False","True"])
+    plt.title("Average restoration performance for different noise levels and 1000 trials")
+    plt.legend()
+    plt.savefig("img/restore_noisy_patterns.png", dpi=300, bbox_inches="tight")
 
 
 if __name__ == '__main__':
@@ -166,4 +197,6 @@ if __name__ == '__main__':
 
     # task_two(p1,p2,p3,p10,p11,W)
 
-    task_three(p1,p2,p3,p10,p11,W)
+    # task_three(p1,p2,p3,p10,p11,W)
+
+    task_four(p1,p2,p3,W)
