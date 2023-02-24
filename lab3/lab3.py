@@ -50,19 +50,7 @@ def task_one():
     print(x1d)
     print("x1d converges to x1" if np.all(x1 == x1d) else "x1d does not converge to x1")
     
-def task_two():
-    pict = np.fromfile('data.csv', sep=',').reshape(11,1024)
-    p1 = pict[0,:].reshape(1024,1)
-    p2 = pict[1,:].reshape(1024,1)
-    p3 = pict[2,:].reshape(1024,1)
-    # p4 = pict[3,:].reshape(1024,1)
-    # p5 = pict[4,:].reshape(1024,1)
-    # p6 = pict[5,:].reshape(1024,1)
-    # p7 = pict[6,:].reshape(1024,1)
-    # p8 = pict[7,:].reshape(1024,1)
-    # p9 = pict[8,:].reshape(1024,1)
-    p10 = pict[9,:].reshape(1024,1)
-    p11 = pict[10,:].reshape(1024,1)
+def task_two(p1,p2,p3,p10,p11,W):
     # Display the frist three patterns
     plt.figure()
     plt.subplot(2,3,1)
@@ -71,9 +59,6 @@ def task_two():
     plt.imshow(p2.reshape(32,32).T, cmap='gray')
     plt.subplot(2,3,3)
     plt.imshow(p3.reshape(32,32).T, cmap='gray')
-    # Calculate weight matrix for the first three patterns
-    W = p1 @ p1.T + p2 @ p2.T + p3 @ p3.T
-    assert W.shape == (1024,1024)
     # Apply update rule and compare with original input patterns
     plt.subplot(2,3,4)
     plt.imshow(update(W,p1).reshape(32,32).T, cmap='gray')
@@ -108,11 +93,11 @@ def task_two():
     p = np.random.choice([-1,1], size=(1024,1))
     P = np.copy(p)
     while not np.all(p == p_prev):
+        p_prev = np.copy(p)
         for i in range(1024):
             p[i] = np.sign(W[i,:] @ p)
             if i%32 == 0 or i == 1023:
                 P = np.hstack((P,p))
-        p_prev = np.copy(p)
     fig = plt.figure()
     ax = fig.add_subplot(111)
     def update_plot(i):
@@ -121,8 +106,64 @@ def task_two():
     a = anim.FuncAnimation(fig, func=update_plot, frames=P.shape[1], repeat=False)
     a.save(f"img/restore_random.gif", fps=5)
 
+def calculate_energy(p,W):
+    return (- p.T @ W @ p)[0][0]
+
+def random_energy_iteration(p,W,name):
+    p_prev = np.zeros((1024,1))
+    E = np.zeros(1)
+    E[0] = calculate_energy(p,W)
+    while not np.all(p == p_prev) and E.shape[0] < 10245: # At most ten full iterations
+        p_prev = np.copy(p)
+        for i in range(1024):
+            p[i] = np.sign(W[i,:] @ p)
+            E = np.hstack((E,np.array([calculate_energy(p,W)])))
+    plt.figure()
+    plt.plot(E[:-1024])
+    plt.xlabel("Iteration")
+    plt.ylabel("Energy")
+    plt.title("Energy of random pattern")
+    plt.savefig(f"img/{name}.png", dpi=300, bbox_inches="tight")
+
+def task_three(p1,p2,p3,p10,p11,W):
+    # Calculate energy of patterns
+    E_p1 = calculate_energy(p1,W)
+    E_p2 = calculate_energy(p2,W)
+    E_p3 = calculate_energy(p3,W)
+    E_p10 = calculate_energy(p10,W)
+    E_p11 = calculate_energy(p11,W)
+    print(f"Energy of p1: {E_p1}, p2: {E_p2}, p3: {E_p3}, p10: {E_p10}, p11: {E_p11}")
+    # Try random pattern
+    np.random.seed(124)
+    p = np.random.choice([-1,1], size=(1024,1))
+    random_energy_iteration(p,W,"energy_random")
+    W2 = np.random.normal(size=(1024,1024))
+    random_energy_iteration(p,W2,"energy_random_gaussian_W")
+    random_energy_iteration(p,0.5*(W2+W2.T),"energy_random_symmetric_gaussian_W")
+    
 
 
 if __name__ == '__main__':
     # task_one()
-    task_two()
+
+    # Load data
+    pict = np.fromfile('data.csv', sep=',').reshape(11,1024)
+    p1 = pict[0,:].reshape(1024,1)
+    p2 = pict[1,:].reshape(1024,1)
+    p3 = pict[2,:].reshape(1024,1)
+    p4 = pict[3,:].reshape(1024,1)
+    p5 = pict[4,:].reshape(1024,1)
+    p6 = pict[5,:].reshape(1024,1)
+    p7 = pict[6,:].reshape(1024,1)
+    p8 = pict[7,:].reshape(1024,1)
+    p9 = pict[8,:].reshape(1024,1)
+    p10 = pict[9,:].reshape(1024,1)
+    p11 = pict[10,:].reshape(1024,1)
+
+    # Calculate weight matrix for the first three patterns
+    W = p1 @ p1.T + p2 @ p2.T + p3 @ p3.T
+    assert W.shape == (1024,1024)
+
+    # task_two(p1,p2,p3,p10,p11,W)
+
+    task_three(p1,p2,p3,p10,p11,W)
