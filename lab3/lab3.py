@@ -148,20 +148,32 @@ def add_noise_and_restore(p,f,W):
     while not np.all(p == p_noise) and not np.all(p_noise == update(W,p_noise)):
         p_noise = update(W,p_noise)
     if np.all(p == p_noise):
-        return 1
+        return 1,p_noise
     else:
         return 0
 
-def task_four(p1,p2,p3,W,trials):
-    f_split = np.arange(0,1.03,0.05)
+def task_four(p1,p2,p3,W):
     np.random.seed(82)
-    # Add noise and try to restore
-    restored = np.zeros((3,21,trials))
-    for i in range(trials):
-        for j, f in enumerate(f_split):
-            restored[0,j,i] = add_noise_and_restore(p1,f,W)
-            restored[1,j,i] = add_noise_and_restore(p2,f,W)
-            restored[2,j,i] = add_noise_and_restore(p3,f,W)
+    # Add noise to p1 and try to restore
+    restored = np.zeros((3,11,1000))
+    patterncount=np.zeros((1024,3300))
+    for i in range(100):
+        for j, f in enumerate(np.arange(0,1.1,0.1)):
+            restored[0,j,i],final = add_noise_and_restore(p1,f,W)
+            restored[1,j,i],final1= add_noise_and_restore(p2,f,W)
+            restored[2,j,i],final2= add_noise_and_restore(p3,f,W)
+            patterncount[:,i*11+j*3]=final.reshape(1024)
+            patterncount[:,i*11+j*3+1]=final1.reshape(1024)
+            patterncount[:,i*11+j*3+2]=final2.reshape(1024)
+             
+            
+    x_unique, x_counts = np.unique(patterncount,axis=1, return_counts=True)  
+    for i in range(x_unique.shape[1]):
+        plt.figure()     
+        plt.imshow(x_unique[:,i].reshape(32,32).T,cmap='gray')
+        plt.title("Pattern "+str(i)+", count: "+str(x_counts[i]))
+        plt.savefig("img/attractor_"+str(i)+".png", dpi=300, bbox_inches="tight")
+    
     plt.figure()
     plt.plot(f_split, np.mean(restored[0,:,:],axis=1), label="p1")
     plt.plot(f_split, np.mean(restored[1,:,:],axis=1), label="p2")
