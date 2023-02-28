@@ -152,27 +152,191 @@ def add_noise_and_restore(p,f,W):
     else:
         return 0
 
-def task_four(p1,p2,p3,W):
+def task_four(p1,p2,p3,W,trials):
+    f_split = np.arange(0,1.03,0.05)
     np.random.seed(82)
-    # Add noise to p1 and try to restore
-    restored = np.zeros((3,11,1000))
-    for i in range(1000):
-        for j, f in enumerate(np.arange(0,1.1,0.1)):
+    # Add noise and try to restore
+    restored = np.zeros((3,21,trials))
+    for i in range(trials):
+        for j, f in enumerate(f_split):
             restored[0,j,i] = add_noise_and_restore(p1,f,W)
             restored[1,j,i] = add_noise_and_restore(p2,f,W)
             restored[2,j,i] = add_noise_and_restore(p3,f,W)
     plt.figure()
-    plt.plot(np.arange(0,1.1,0.1), np.mean(restored[0,:,:],axis=1), label="p1")
-    plt.plot(np.arange(0,1.1,0.1), np.mean(restored[1,:,:],axis=1), label="p2")
-    plt.plot(np.arange(0,1.1,0.1), np.mean(restored[2,:,:],axis=1), label="p3")
+    plt.plot(f_split, np.mean(restored[0,:,:],axis=1), label="p1")
+    plt.plot(f_split, np.mean(restored[1,:,:],axis=1), label="p2")
+    plt.plot(f_split, np.mean(restored[2,:,:],axis=1), label="p3")
     plt.xlabel("Noise level")
     plt.ylabel("Restored")
     plt.xticks(np.arange(0,1.1,0.1))
     # plt.yticks([0,1],["False","True"])
-    plt.title("Average restoration performance for different noise levels and 1000 trials")
+    plt.title(f"Average restoration performance for different noise levels and {trials} trials")
     plt.legend()
-    plt.savefig("img/restore_noisy_patterns.png", dpi=300, bbox_inches="tight")
+    plt.savefig("img/restore_3_noisy_patterns.png", dpi=300, bbox_inches="tight")
 
+def task_five(p1,p2,p3,p4,p5,p6,p7,p8,p9,W,trials):
+    f_split = np.arange(0,1.03,0.05)
+    # Add noise and try to restore
+    W += p4 @ p4.T
+    restored = np.zeros((4,21,trials))
+    for i in range(trials):
+        for j, f in enumerate(f_split):
+            restored[0,j,i] = add_noise_and_restore(p1,f,W)
+            restored[1,j,i] = add_noise_and_restore(p2,f,W)
+            restored[2,j,i] = add_noise_and_restore(p3,f,W)
+            restored[3,j,i] = add_noise_and_restore(p4,f,W)
+    plt.figure()
+    plt.plot(f_split, np.mean(restored[0,:,:],axis=1), label="p1")
+    plt.plot(f_split, np.mean(restored[1,:,:],axis=1), label="p2")
+    plt.plot(f_split, np.mean(restored[2,:,:],axis=1), label="p3")
+    plt.plot(f_split, np.mean(restored[3,:,:],axis=1), label="p4")
+    plt.xlabel("Noise level")
+    plt.ylabel("Restored")
+    plt.xticks(np.arange(0,1.1,0.1))
+    # plt.yticks([0,1],["False","True"])
+    plt.title(f"Average restoration performance for different noise levels and {trials} trials")
+    plt.legend()
+    plt.savefig("img/restore_4_noisy_patterns.png", dpi=300, bbox_inches="tight")
+
+    # Add noise and try to restore
+    W += p5 @ p5.T
+    restored = np.zeros((5,21,trials))
+    for i in range(trials):
+        for j, f in enumerate(f_split):
+            restored[0,j,i] = add_noise_and_restore(p1,f,W)
+            restored[1,j,i] = add_noise_and_restore(p2,f,W)
+            restored[2,j,i] = add_noise_and_restore(p3,f,W)
+            restored[3,j,i] = add_noise_and_restore(p4,f,W)
+            restored[4,j,i] = add_noise_and_restore(p5,f,W)
+    plt.figure()
+    plt.plot(f_split, np.mean(restored[0,:,:],axis=1), label="p1")
+    plt.plot(f_split, np.mean(restored[1,:,:],axis=1), label="p2")
+    plt.plot(f_split, np.mean(restored[2,:,:],axis=1), label="p3")
+    plt.plot(f_split, np.mean(restored[3,:,:],axis=1), label="p4")
+    plt.plot(f_split, np.mean(restored[4,:,:],axis=1), label="p5")
+    plt.xlabel("Noise level")
+    plt.ylabel("Restored")
+    plt.xticks(np.arange(0,1.1,0.1))
+    # plt.yticks([0,1],["False","True"])
+    plt.title(f"Average restoration performance for different noise levels and {trials} trials")
+    plt.legend()
+    plt.savefig("img/restore_5_noisy_patterns.png", dpi=300, bbox_inches="tight")
+
+    # Add noise and try to restore
+    W += p6 @ p6.T
+    restored = np.zeros((6,21,trials))
+    for i in range(trials):
+        for j, f in enumerate(f_split):
+            restored[0,j,i] = add_noise_and_restore(p1,f,W)
+            restored[1,j,i] = add_noise_and_restore(p2,f,W)
+            restored[2,j,i] = add_noise_and_restore(p3,f,W)
+            restored[3,j,i] = add_noise_and_restore(p4,f,W)
+            restored[4,j,i] = add_noise_and_restore(p5,f,W)
+            restored[5,j,i] = add_noise_and_restore(p6,f,W)
+    plt.figure()
+    plt.plot(f_split, np.mean(restored[0,:,:],axis=1), label="p1")
+    plt.plot(f_split, np.mean(restored[1,:,:],axis=1), label="p2")
+    plt.plot(f_split, np.mean(restored[2,:,:],axis=1), label="p3")
+    plt.plot(f_split, np.mean(restored[3,:,:],axis=1), label="p4")
+    plt.plot(f_split, np.mean(restored[4,:,:],axis=1), label="p5")
+    plt.plot(f_split, np.mean(restored[5,:,:],axis=1), label="p6")
+    plt.xlabel("Noise level")
+    plt.ylabel("Restored")
+    plt.xticks(np.arange(0,1.1,0.1))
+    # plt.yticks([0,1],["False","True"])
+    plt.title(f"Average restoration performance for different noise levels and {trials} trials")
+    plt.legend()
+    plt.savefig("img/restore_6_noisy_patterns.png", dpi=300, bbox_inches="tight")
+
+    # Add noise and try to restore
+    W += p7 @ p7.T
+    restored = np.zeros((7,21,trials))
+    for i in range(trials):
+        for j, f in enumerate(f_split):
+            restored[0,j,i] = add_noise_and_restore(p1,f,W)
+            restored[1,j,i] = add_noise_and_restore(p2,f,W)
+            restored[2,j,i] = add_noise_and_restore(p3,f,W)
+            restored[3,j,i] = add_noise_and_restore(p4,f,W)
+            restored[4,j,i] = add_noise_and_restore(p5,f,W)
+            restored[5,j,i] = add_noise_and_restore(p6,f,W)
+            restored[6,j,i] = add_noise_and_restore(p7,f,W)
+    plt.figure()
+    plt.plot(f_split, np.mean(restored[0,:,:],axis=1), label="p1")
+    plt.plot(f_split, np.mean(restored[1,:,:],axis=1), label="p2")
+    plt.plot(f_split, np.mean(restored[2,:,:],axis=1), label="p3")
+    plt.plot(f_split, np.mean(restored[3,:,:],axis=1), label="p4")
+    plt.plot(f_split, np.mean(restored[4,:,:],axis=1), label="p5")
+    plt.plot(f_split, np.mean(restored[5,:,:],axis=1), label="p6")
+    plt.plot(f_split, np.mean(restored[6,:,:],axis=1), label="p7")
+    plt.xlabel("Noise level")
+    plt.ylabel("Restored")
+    plt.xticks(np.arange(0,1.1,0.1))
+    # plt.yticks([0,1],["False","True"])
+    plt.title(f"Average restoration performance for different noise levels and {trials} trials")
+    plt.legend()
+    plt.savefig("img/restore_7_noisy_patterns.png", dpi=300, bbox_inches="tight")
+
+    # Add noise and try to restore
+    W += p8 @ p8.T
+    restored = np.zeros((8,21,trials))
+    for i in range(trials):
+        for j, f in enumerate(f_split):
+            restored[0,j,i] = add_noise_and_restore(p1,f,W)
+            restored[1,j,i] = add_noise_and_restore(p2,f,W)
+            restored[2,j,i] = add_noise_and_restore(p3,f,W)
+            restored[3,j,i] = add_noise_and_restore(p4,f,W)
+            restored[4,j,i] = add_noise_and_restore(p5,f,W)
+            restored[5,j,i] = add_noise_and_restore(p6,f,W)
+            restored[6,j,i] = add_noise_and_restore(p7,f,W)
+            restored[7,j,i] = add_noise_and_restore(p8,f,W)
+    plt.figure()
+    plt.plot(f_split, np.mean(restored[0,:,:],axis=1), label="p1")
+    plt.plot(f_split, np.mean(restored[1,:,:],axis=1), label="p2")
+    plt.plot(f_split, np.mean(restored[2,:,:],axis=1), label="p3")
+    plt.plot(f_split, np.mean(restored[3,:,:],axis=1), label="p4")
+    plt.plot(f_split, np.mean(restored[4,:,:],axis=1), label="p5")
+    plt.plot(f_split, np.mean(restored[5,:,:],axis=1), label="p6")
+    plt.plot(f_split, np.mean(restored[6,:,:],axis=1), label="p7")
+    plt.plot(f_split, np.mean(restored[7,:,:],axis=1), label="p8")
+    plt.xlabel("Noise level")
+    plt.ylabel("Restored")
+    plt.xticks(np.arange(0,1.1,0.1))
+    # plt.yticks([0,1],["False","True"])
+    plt.title(f"Average restoration performance for different noise levels and {trials} trials")
+    plt.legend()
+    plt.savefig("img/restore_8_noisy_patterns.png", dpi=300, bbox_inches="tight")
+        
+    # Add noise and try to restore
+    W += p9 @ p9.T
+    restored = np.zeros((9,21,trials))
+    for i in range(trials):
+        for j, f in enumerate(f_split):
+            restored[0,j,i] = add_noise_and_restore(p1,f,W)
+            restored[1,j,i] = add_noise_and_restore(p2,f,W)
+            restored[2,j,i] = add_noise_and_restore(p3,f,W)
+            restored[3,j,i] = add_noise_and_restore(p4,f,W)
+            restored[4,j,i] = add_noise_and_restore(p5,f,W)
+            restored[5,j,i] = add_noise_and_restore(p6,f,W)
+            restored[6,j,i] = add_noise_and_restore(p7,f,W)
+            restored[7,j,i] = add_noise_and_restore(p8,f,W)
+            restored[8,j,i] = add_noise_and_restore(p9,f,W)
+    plt.figure()
+    plt.plot(f_split, np.mean(restored[0,:,:],axis=1), label="p1")
+    plt.plot(f_split, np.mean(restored[1,:,:],axis=1), label="p2")
+    plt.plot(f_split, np.mean(restored[2,:,:],axis=1), label="p3")
+    plt.plot(f_split, np.mean(restored[3,:,:],axis=1), label="p4")
+    plt.plot(f_split, np.mean(restored[4,:,:],axis=1), label="p5")
+    plt.plot(f_split, np.mean(restored[5,:,:],axis=1), label="p6")
+    plt.plot(f_split, np.mean(restored[6,:,:],axis=1), label="p7")
+    plt.plot(f_split, np.mean(restored[7,:,:],axis=1), label="p8")
+    plt.plot(f_split, np.mean(restored[8,:,:],axis=1), label="p9")
+    plt.xlabel("Noise level")
+    plt.ylabel("Restored")
+    plt.xticks(np.arange(0,1.1,0.1))
+    # plt.yticks([0,1],["False","True"])
+    plt.title(f"Average restoration performance for different noise levels and {trials} trials")
+    plt.legend()
+    plt.savefig("img/restore_9_noisy_patterns.png", dpi=300, bbox_inches="tight")
 
 if __name__ == '__main__':
     # task_one()
@@ -199,4 +363,8 @@ if __name__ == '__main__':
 
     # task_three(p1,p2,p3,p10,p11,W)
 
-    task_four(p1,p2,p3,W)
+    trials = 100
+
+    task_four(p1,p2,p3,W,trials)
+
+    task_five(p1,p2,p3,p4,p5,p6,p7,p8,p9,W,trials)
