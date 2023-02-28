@@ -153,12 +153,13 @@ def add_noise_and_restore(p,f,W):
         return 0
 
 def task_four(p1,p2,p3,W):
+    f_split = np.arange(0,1.03,0.05)
     np.random.seed(82)
     # Add noise to p1 and try to restore
     restored = np.zeros((3,11,1000))
     patterncount=np.zeros((1024,3300))
-    for i in range(100):
-        for j, f in enumerate(np.arange(0,1.1,0.1)):
+    for i in range(1000):
+        for j, f in enumerate(f_split):
             restored[0,j,i],final = add_noise_and_restore(p1,f,W)
             restored[1,j,i],final1= add_noise_and_restore(p2,f,W)
             restored[2,j,i],final2= add_noise_and_restore(p3,f,W)
