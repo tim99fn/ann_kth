@@ -150,7 +150,7 @@ def add_noise_and_restore(p,f,W):
     if np.all(p == p_noise):
         return 1,p_noise
     else:
-        return 0
+        return 0,p_noise
 
 def task_four(p1,p2,p3,W):
     f_split = np.arange(0,1.03,0.05)
@@ -187,17 +187,17 @@ def task_four(p1,p2,p3,W):
     plt.legend()
     plt.savefig("img/restore_3_noisy_patterns.png", dpi=300, bbox_inches="tight")
 
-def task_five(p1,p2,p3,p4,p5,p6,p7,p8,p9,W,trials):
+def task_five(p1,p2,p3,p4,p5,p6,p7,p8,p9,W,trials,random):
     f_split = np.arange(0,1.03,0.05)
     # Add noise and try to restore
     W += p4 @ p4.T
     restored = np.zeros((4,21,trials))
     for i in range(trials):
         for j, f in enumerate(f_split):
-            restored[0,j,i] = add_noise_and_restore(p1,f,W)
-            restored[1,j,i] = add_noise_and_restore(p2,f,W)
-            restored[2,j,i] = add_noise_and_restore(p3,f,W)
-            restored[3,j,i] = add_noise_and_restore(p4,f,W)
+            restored[0,j,i],_ = add_noise_and_restore(p1,f,W)
+            restored[1,j,i],_ = add_noise_and_restore(p2,f,W)
+            restored[2,j,i],_= add_noise_and_restore(p3,f,W)
+            restored[3,j,i],_ = add_noise_and_restore(p4,f,W)
     plt.figure()
     plt.plot(f_split, np.mean(restored[0,:,:],axis=1), label="p1")
     plt.plot(f_split, np.mean(restored[1,:,:],axis=1), label="p2")
@@ -209,18 +209,18 @@ def task_five(p1,p2,p3,p4,p5,p6,p7,p8,p9,W,trials):
     # plt.yticks([0,1],["False","True"])
     plt.title(f"Average restoration performance for different noise levels and {trials} trials")
     plt.legend()
-    plt.savefig("img/restore_4_noisy_patterns.png", dpi=300, bbox_inches="tight")
+    plt.savefig("img/restore_4_noisy_patterns"+random+".png", dpi=300, bbox_inches="tight")
 
     # Add noise and try to restore
     W += p5 @ p5.T
     restored = np.zeros((5,21,trials))
     for i in range(trials):
         for j, f in enumerate(f_split):
-            restored[0,j,i] = add_noise_and_restore(p1,f,W)
-            restored[1,j,i] = add_noise_and_restore(p2,f,W)
-            restored[2,j,i] = add_noise_and_restore(p3,f,W)
-            restored[3,j,i] = add_noise_and_restore(p4,f,W)
-            restored[4,j,i] = add_noise_and_restore(p5,f,W)
+            restored[0,j,i],_= add_noise_and_restore(p1,f,W)
+            restored[1,j,i],_= add_noise_and_restore(p2,f,W)
+            restored[2,j,i],_ = add_noise_and_restore(p3,f,W)
+            restored[3,j,i],_ = add_noise_and_restore(p4,f,W)
+            restored[4,j,i],_ = add_noise_and_restore(p5,f,W)
     plt.figure()
     plt.plot(f_split, np.mean(restored[0,:,:],axis=1), label="p1")
     plt.plot(f_split, np.mean(restored[1,:,:],axis=1), label="p2")
@@ -233,19 +233,19 @@ def task_five(p1,p2,p3,p4,p5,p6,p7,p8,p9,W,trials):
     # plt.yticks([0,1],["False","True"])
     plt.title(f"Average restoration performance for different noise levels and {trials} trials")
     plt.legend()
-    plt.savefig("img/restore_5_noisy_patterns.png", dpi=300, bbox_inches="tight")
+    plt.savefig("img/restore_5_noisy_patterns"+random+".png", dpi=300, bbox_inches="tight")
 
     # Add noise and try to restore
     W += p6 @ p6.T
     restored = np.zeros((6,21,trials))
     for i in range(trials):
         for j, f in enumerate(f_split):
-            restored[0,j,i] = add_noise_and_restore(p1,f,W)
-            restored[1,j,i] = add_noise_and_restore(p2,f,W)
-            restored[2,j,i] = add_noise_and_restore(p3,f,W)
-            restored[3,j,i] = add_noise_and_restore(p4,f,W)
-            restored[4,j,i] = add_noise_and_restore(p5,f,W)
-            restored[5,j,i] = add_noise_and_restore(p6,f,W)
+            restored[0,j,i],_ = add_noise_and_restore(p1,f,W)
+            restored[1,j,i],_ = add_noise_and_restore(p2,f,W)
+            restored[2,j,i],_ = add_noise_and_restore(p3,f,W)
+            restored[3,j,i],_ = add_noise_and_restore(p4,f,W)
+            restored[4,j,i],_ = add_noise_and_restore(p5,f,W)
+            restored[5,j,i],_ = add_noise_and_restore(p6,f,W)
     plt.figure()
     plt.plot(f_split, np.mean(restored[0,:,:],axis=1), label="p1")
     plt.plot(f_split, np.mean(restored[1,:,:],axis=1), label="p2")
@@ -259,20 +259,20 @@ def task_five(p1,p2,p3,p4,p5,p6,p7,p8,p9,W,trials):
     # plt.yticks([0,1],["False","True"])
     plt.title(f"Average restoration performance for different noise levels and {trials} trials")
     plt.legend()
-    plt.savefig("img/restore_6_noisy_patterns.png", dpi=300, bbox_inches="tight")
+    plt.savefig("img/restore_6_noisy_patterns"+random+".png", dpi=300, bbox_inches="tight")
 
     # Add noise and try to restore
     W += p7 @ p7.T
     restored = np.zeros((7,21,trials))
     for i in range(trials):
         for j, f in enumerate(f_split):
-            restored[0,j,i] = add_noise_and_restore(p1,f,W)
-            restored[1,j,i] = add_noise_and_restore(p2,f,W)
-            restored[2,j,i] = add_noise_and_restore(p3,f,W)
-            restored[3,j,i] = add_noise_and_restore(p4,f,W)
-            restored[4,j,i] = add_noise_and_restore(p5,f,W)
-            restored[5,j,i] = add_noise_and_restore(p6,f,W)
-            restored[6,j,i] = add_noise_and_restore(p7,f,W)
+            restored[0,j,i] ,_= add_noise_and_restore(p1,f,W)
+            restored[1,j,i],_ = add_noise_and_restore(p2,f,W)
+            restored[2,j,i],_ = add_noise_and_restore(p3,f,W)
+            restored[3,j,i],_ = add_noise_and_restore(p4,f,W)
+            restored[4,j,i],_ = add_noise_and_restore(p5,f,W)
+            restored[5,j,i],_ = add_noise_and_restore(p6,f,W)
+            restored[6,j,i],_ = add_noise_and_restore(p7,f,W)
     plt.figure()
     plt.plot(f_split, np.mean(restored[0,:,:],axis=1), label="p1")
     plt.plot(f_split, np.mean(restored[1,:,:],axis=1), label="p2")
@@ -287,21 +287,21 @@ def task_five(p1,p2,p3,p4,p5,p6,p7,p8,p9,W,trials):
     # plt.yticks([0,1],["False","True"])
     plt.title(f"Average restoration performance for different noise levels and {trials} trials")
     plt.legend()
-    plt.savefig("img/restore_7_noisy_patterns.png", dpi=300, bbox_inches="tight")
+    plt.savefig("img/restore_7_noisy_patterns"+random+".png", dpi=300, bbox_inches="tight")
 
     # Add noise and try to restore
     W += p8 @ p8.T
     restored = np.zeros((8,21,trials))
     for i in range(trials):
         for j, f in enumerate(f_split):
-            restored[0,j,i] = add_noise_and_restore(p1,f,W)
-            restored[1,j,i] = add_noise_and_restore(p2,f,W)
-            restored[2,j,i] = add_noise_and_restore(p3,f,W)
-            restored[3,j,i] = add_noise_and_restore(p4,f,W)
-            restored[4,j,i] = add_noise_and_restore(p5,f,W)
-            restored[5,j,i] = add_noise_and_restore(p6,f,W)
-            restored[6,j,i] = add_noise_and_restore(p7,f,W)
-            restored[7,j,i] = add_noise_and_restore(p8,f,W)
+            restored[0,j,i],_ = add_noise_and_restore(p1,f,W)
+            restored[1,j,i],_ = add_noise_and_restore(p2,f,W)
+            restored[2,j,i],_ = add_noise_and_restore(p3,f,W)
+            restored[3,j,i],_ = add_noise_and_restore(p4,f,W)
+            restored[4,j,i],_ = add_noise_and_restore(p5,f,W)
+            restored[5,j,i],_ = add_noise_and_restore(p6,f,W)
+            restored[6,j,i],_ = add_noise_and_restore(p7,f,W)
+            restored[7,j,i],_ = add_noise_and_restore(p8,f,W)
     plt.figure()
     plt.plot(f_split, np.mean(restored[0,:,:],axis=1), label="p1")
     plt.plot(f_split, np.mean(restored[1,:,:],axis=1), label="p2")
@@ -317,22 +317,22 @@ def task_five(p1,p2,p3,p4,p5,p6,p7,p8,p9,W,trials):
     # plt.yticks([0,1],["False","True"])
     plt.title(f"Average restoration performance for different noise levels and {trials} trials")
     plt.legend()
-    plt.savefig("img/restore_8_noisy_patterns.png", dpi=300, bbox_inches="tight")
+    plt.savefig("img/restore_8_noisy_patterns"+random+".png", dpi=300, bbox_inches="tight")
         
     # Add noise and try to restore
     W += p9 @ p9.T
     restored = np.zeros((9,21,trials))
     for i in range(trials):
         for j, f in enumerate(f_split):
-            restored[0,j,i] = add_noise_and_restore(p1,f,W)
-            restored[1,j,i] = add_noise_and_restore(p2,f,W)
-            restored[2,j,i] = add_noise_and_restore(p3,f,W)
-            restored[3,j,i] = add_noise_and_restore(p4,f,W)
-            restored[4,j,i] = add_noise_and_restore(p5,f,W)
-            restored[5,j,i] = add_noise_and_restore(p6,f,W)
-            restored[6,j,i] = add_noise_and_restore(p7,f,W)
-            restored[7,j,i] = add_noise_and_restore(p8,f,W)
-            restored[8,j,i] = add_noise_and_restore(p9,f,W)
+            restored[0,j,i],_ = add_noise_and_restore(p1,f,W)
+            restored[1,j,i],_ = add_noise_and_restore(p2,f,W)
+            restored[2,j,i],_ = add_noise_and_restore(p3,f,W)
+            restored[3,j,i],_ = add_noise_and_restore(p4,f,W)
+            restored[4,j,i],_ = add_noise_and_restore(p5,f,W)
+            restored[5,j,i],_ = add_noise_and_restore(p6,f,W)
+            restored[6,j,i],_ = add_noise_and_restore(p7,f,W)
+            restored[7,j,i],_ = add_noise_and_restore(p8,f,W)
+            restored[8,j,i],_ = add_noise_and_restore(p9,f,W)
     plt.figure()
     plt.plot(f_split, np.mean(restored[0,:,:],axis=1), label="p1")
     plt.plot(f_split, np.mean(restored[1,:,:],axis=1), label="p2")
@@ -349,8 +349,53 @@ def task_five(p1,p2,p3,p4,p5,p6,p7,p8,p9,W,trials):
     # plt.yticks([0,1],["False","True"])
     plt.title(f"Average restoration performance for different noise levels and {trials} trials")
     plt.legend()
-    plt.savefig("img/restore_9_noisy_patterns.png", dpi=300, bbox_inches="tight")
-
+    plt.savefig("img/restore_9_noisy_patterns"+random+".png", dpi=300, bbox_inches="tight")
+    
+def task_five_one(it,sample_start,sample_step,sample_end,n_nodes):
+    samples=np.arange(sample_start,sample_end+sample_step,sample_step)
+    data=np.zeros((samples.shape[0],it))
+    for q in range(it):
+        W=np.zeros((n_nodes,n_nodes))
+        
+        mat=np.sign(np.random.uniform(low=-0.5,high=1.5,size=(n_nodes,1,sample_end)))
+        for j,sample in enumerate(samples):
+            
+            for i in range(sample_step):
+                W+=mat[:,:,j+i]@mat[:,:,j+i].T
+            W-=np.diag(np.diag(W))
+            pred=update(W,mat[:,-1,:])
+            percent=(sample-np.count_nonzero(np.sum(np.abs(pred[:,:sample]-mat[:,-1,:sample]),axis=0)))/sample
+            data[j,q] = percent
+    plt.figure()
+    plt.plot(samples,np.mean(data,axis=1))
+    plt.xlabel("Number of samples")
+    plt.ylabel("Percentage of correct predictions")
+    plt.savefig("img/task_five_bias.png", dpi=300, bbox_inches="tight")
+def task_five_one_rand(it,sample_start,sample_step,sample_end,n_nodes):
+    samples=np.arange(sample_start,sample_end+sample_step,sample_step)
+    data=np.zeros((samples.shape[0],it))
+    for q in range(it):
+        W=np.zeros((n_nodes,n_nodes))
+        mat=np.sign(np.random.uniform(low=-0.5,high=1.5,size=(n_nodes,1,sample_end)))
+        mat_noise = np.copy(mat)
+        id = np.random.choice(100, size=(5,300), replace=True)
+        for i in range(300):
+            mat_noise[id[:,i],0,i]=-mat_noise[id[:,i],0,i]
+        
+        for j,sample in enumerate(samples):
+            
+            for i in range(sample_step):
+                W+=mat[:,:,j+i]@mat[:,:,j+i].T
+            W-=np.diag(np.diag(W))
+            pred=update(W,mat_noise[:,-1,:])
+            percent=(sample-np.count_nonzero(np.sum(np.abs(pred[:,:sample]-mat[:,-1,:sample]),axis=0)))/sample
+            data[j,q] = percent
+    plt.figure()
+    plt.plot(samples,np.mean(data,axis=1))
+    plt.xlabel("Number of samples")
+    plt.ylabel("Percentage of correct predictions")
+    plt.savefig("img/task_five_bias_rand.png", dpi=300, bbox_inches="tight")  
+    
 if __name__ == '__main__':
     # task_one()
 
@@ -378,6 +423,11 @@ if __name__ == '__main__':
 
     trials = 100
 
-    task_four(p1,p2,p3,W,trials)
+    #task_four(p1,p2,p3,W,trials)
 
-    task_five(p1,p2,p3,p4,p5,p6,p7,p8,p9,W,trials)
+    #task_five(p1,p2,p3,p4,p5,p6,p7,p8,p9,W,trials)
+    #mat=np.random.choice([-1,1],size=(1024,1,9))
+    #W=mat[:,:,0]@mat[:,:,0].T+mat[:,:,1]@mat[:,:,1].T+mat[:,:,2]@mat[:,:,2].T
+    #task_five(mat[:,:,0],mat[:,:,1],mat[:,:,2],mat[:,:,3],mat[:,:,4],mat[:,:,5],mat[:,:,6],mat[:,:,7],mat[:,:,8],W,trials,'_random')
+    task_five_one_rand(30,1,1,300,100)
+    task_five_one(30,1,1,300,100)
