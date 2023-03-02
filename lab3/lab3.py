@@ -395,6 +395,42 @@ def task_five_one_rand(it,sample_start,sample_step,sample_end,n_nodes):
     plt.xlabel("Number of samples")
     plt.ylabel("Percentage of correct predictions")
     plt.savefig("img/task_five_bias_rand.png", dpi=300, bbox_inches="tight")  
+def step(x,activity):
+    return np.where(x>activity,0,1)
+def step_update(x):
+    return np.where(x>0,0,1)
+def new_update(W,mat,bias):
+    pattern=0.5+0.5*np.sign(W@mat- bias)
+    return pattern
+
+def task_six(n_nodes, bias, sample_start, sample_step, sample_end,activity,it):
+    samples=np.arange(sample_start,sample_end+sample_step,sample_step)
+    data=np.zeros((it,bias.shape[0]),)
+    for l in range(it):
+        mat=step(np.random.uniform(low=0,high=1,size=(n_nodes,1,sample_end)),activity)
+        for k,bia in enumerate(bias):
+            W=np.zeros((n_nodes,n_nodes))
+            for j,sample in enumerate(samples):
+                
+                for i in range(sample_step):
+                    W+=(mat[:,:,j+i]-activity)@(mat[:,:,j+i].T-activity)
+                
+                pred=new_update(W,mat[:,-1,:],bia)
+                percent=(sample-np.count_nonzero(np.sum(np.abs(pred[:,:sample]-mat[:,-1,:sample]),axis=0)))/sample
+                if percent<1:
+                    data[l,k] = j
+                    break
+            
+    plt.figure()
+    plt.plot(bias,np.mean(data,axis=0))
+    plt.xlabel("Bias")
+    plt.ylabel("Number of perfectly reconstructed samples")
+    plt.savefig("img/task_six_one.png", dpi=300, bbox_inches="tight")  
+
+    
+    
+    
+    
     
 if __name__ == '__main__':
     # task_one()
@@ -429,5 +465,7 @@ if __name__ == '__main__':
     #mat=np.random.choice([-1,1],size=(1024,1,9))
     #W=mat[:,:,0]@mat[:,:,0].T+mat[:,:,1]@mat[:,:,1].T+mat[:,:,2]@mat[:,:,2].T
     #task_five(mat[:,:,0],mat[:,:,1],mat[:,:,2],mat[:,:,3],mat[:,:,4],mat[:,:,5],mat[:,:,6],mat[:,:,7],mat[:,:,8],W,trials,'_random')
-    task_five_one_rand(30,1,1,300,100)
-    task_five_one(30,1,1,300,100)
+    #task_five_one_rand(30,1,1,300,100)
+    #task_five_one(30,1,1,300,100)
+    bias=np.arange(0,10,0.1)
+    task_six(100,bias,1,1,100,0.1,100)
